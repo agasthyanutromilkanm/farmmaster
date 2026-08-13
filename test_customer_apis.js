@@ -120,7 +120,10 @@ async function runTests() {
         isDefault: true
       })
     });
-    const putAddressData = await putAddressRes.json();
+    console.log("PUT Response status:", putAddressRes.status);
+    const putAddressText = await putAddressRes.text();
+    console.log("PUT Response text:", putAddressText);
+    const putAddressData = JSON.parse(putAddressText);
     console.log("Response:", JSON.stringify(putAddressData, null, 2));
     if (!putAddressRes.ok || !putAddressData.success || putAddressData.data.label !== "Work") {
       throw new Error("Failed PUT /addresses test");

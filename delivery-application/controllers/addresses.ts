@@ -203,7 +203,11 @@ export async function getAddressById(req: NextRequest, { params }: { params: { i
       return unauthorizedResponse('Invalid or expired token');
     }
 
-    const { id } = params;
+    let id = params?.id;
+    if (!id) {
+      const { searchParams } = new URL(req.url);
+      id = searchParams.get('id') || '';
+    }
     const address = await Address.findOne({ _id: id, isDeleted: false });
     if (!address) {
       return errorResponse('Address not found', 404);
@@ -234,11 +238,16 @@ export async function updateAddress(req: NextRequest, { params }: { params: { id
       return unauthorizedResponse('Profile not found');
     }
 
-    const { id } = params;
     let body: any = {};
     try {
       body = await req.json();
     } catch {}
+
+    let id = params?.id;
+    if (!id) {
+      const { searchParams } = new URL(req.url);
+      id = searchParams.get('id') || body?.id || body?._id || '';
+    }
 
     const addressLine1 = body?.addressLine1 ? String(body.addressLine1).trim() : (body?.address1 ? String(body.address1).trim() : '');
     const addressLine2 = body?.addressLine2 ? String(body.addressLine2).trim() : (body?.address2 ? String(body.address2).trim() : '');
@@ -273,6 +282,16 @@ export async function updateAddress(req: NextRequest, { params }: { params: { id
       { new: true }
     );
 
+    // Sync profile model fields if they exist and this is the default address
+    if (isDefault && 'address1' in profile) {
+      profile.address1 = addressLine1;
+      profile.address2 = addressLine2;
+      profile.city = city;
+      profile.state = state;
+      profile.pincode = pincode;
+      await profile.save();
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Address updated successfully',
@@ -292,8 +311,26 @@ export async function deleteAddress(req: NextRequest, { params }: { params: { id
       return unauthorizedResponse('Invalid or expired token');
     }
 
-    const { id } = params;
-    await Address.findByIdAndUpdate(id, { isDeleted: true });
+    let id = params?.id;
+    if (!id) {
+      const { searchParams } = new URL(req.url);
+      id = searchParams.get('id') || '';
+    }
+    const deletedAddress = await Address.findByIdAndUpdate(id, { isDeleted: true });
+
+    // If the deleted address was default, clear profile fields
+    if (deletedAddress && deletedAddress.isDefault) {
+      await dbConnect();
+      const profile = await getProfileFromUser(user);
+      if (profile && 'address1' in profile) {
+        profile.address1 = '';
+        profile.address2 = '';
+        profile.city = '';
+        profile.state = '';
+        profile.pincode = '';
+        await profile.save();
+      }
+    }
 
     return successResponse(null, 'Address deleted successfully');
   } catch (error: any) {
@@ -315,27 +352,63 @@ export async function setDefaultAddress(req: NextRequest, { params }: { params: 
       return unauthorizedResponse('Profile not found');
     }
 
-    const { id } = params;
+    let id = params?.id;
+    if (!id) {
+      const { searchParams } = new URL(req.url);
+      id = searchParams.get('id') || '';
+    }
 
-    await Address.updateMany(
-      { customerId: profile._id },
-      { isDefault: false }
-    );
+    let body: any = {};
+    try {
+      body = await req.json();
+    } catch {}
+
+    const updateData: any = {};
+    if (body.fullName !== undefined) updateData.fullName = String(body.fullName).trim();
+    if (body.label !== undefined) updateData.label = String(body.label).trim();
+    if (body.phone !== undefined) updateData.phone = String(body.phone).trim();
+    if (body.mobile !== undefined) updateData.phone = String(body.mobile).trim();
+    if (body.addressLine1 !== undefined) updateData.addressLine1 = String(body.addressLine1).trim();
+    if (body.address1 !== undefined) updateData.addressLine1 = String(body.address1).trim();
+    if (body.addressLine2 !== undefined) updateData.addressLine2 = String(body.addressLine2).trim();
+    if (body.address2 !== undefined) updateData.addressLine2 = String(body.address2).trim();
+    if (body.city !== undefined) updateData.city = String(body.city).trim();
+    if (body.state !== undefined) updateData.state = String(body.state).trim();
+    if (body.pincode !== undefined) updateData.pincode = String(body.pincode).trim();
+
+    const isDefault = body.isDefault !== undefined ? !!body.isDefault : (Object.keys(updateData).length === 0);
+    if (isDefault) {
+      updateData.isDefault = true;
+      await Address.updateMany(
+        { customerId: profile._id },
+        { isDefault: false }
+      );
+    }
 
     const updatedAddress = await Address.findByIdAndUpdate(
       id,
-      { isDefault: true },
+      updateData,
       { new: true }
     );
 
+    // Sync profile model fields if they exist and this is/becomes the default address
+    if (updatedAddress && updatedAddress.isDefault && 'address1' in profile) {
+      profile.address1 = updatedAddress.addressLine1;
+      profile.address2 = updatedAddress.addressLine2;
+      profile.city = updatedAddress.city;
+      profile.state = updatedAddress.state;
+      profile.pincode = updatedAddress.pincode;
+      await profile.save();
+    }
+
     return NextResponse.json({
       success: true,
-      message: 'Address set as default successfully',
+      message: 'Address set as default or updated successfully',
       data: updatedAddress,
       address: updatedAddress,
     });
   } catch (error: any) {
-    console.error('[Delivery Set Default Address] error:', error);
+    console.error('[Delivery Set Default/Update Address] error:', error);
     return errorResponse(error.message || 'Internal server error', 500);
   }
 }

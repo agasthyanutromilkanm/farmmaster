@@ -1,13 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { 
-  Tractor, 
-  MapPin, 
-  Plus, 
-  MoreVertical, 
-  Edit, 
-  Trash2, 
+import {
+  Tractor,
+  MapPin,
+  Plus,
+  MoreVertical,
+  Edit,
+  Trash2,
   X,
   Loader2,
   CheckCircle2,
@@ -61,9 +61,9 @@ export default function FarmsPage() {
       const token = localStorage.getItem('token');
       const res = await fetch('/api/farms', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}` 
+          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify(newFarm)
       });
@@ -90,7 +90,7 @@ export default function FarmsPage() {
           <h1 className="text-4xl font-extrabold text-slate-900 mb-2">Farm Management</h1>
           <p className="text-slate-500 font-medium">Registry and geolocation of all dairy production units.</p>
         </div>
-        <button 
+        <button
           onClick={() => setShowModal(true)}
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-bold transition-all duration-300 shadow-xl shadow-blue-600/20 active:scale-95"
         >
@@ -116,10 +116,10 @@ export default function FarmsPage() {
                     <MoreVertical className="w-6 h-6" />
                   </button>
                 </div>
-                
+
                 <h3 className="text-2xl font-black text-slate-900 mb-2 truncate leading-none">{farm.name}</h3>
                 <p className="text-xs text-blue-500 font-black mb-6 uppercase tracking-widest">{farm.code}</p>
-                
+
                 <div className="space-y-4">
                   <div className="flex items-start gap-3 text-sm text-slate-500 font-medium">
                     <MapPin className="w-5 h-5 mt-0.5 text-slate-300 group-hover:text-blue-500 transition-colors" />
@@ -127,19 +127,19 @@ export default function FarmsPage() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="px-8 py-6 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
                 <span className={`text-[10px] uppercase font-black tracking-tighter px-3 py-1 rounded-full border ${farm.status ? 'bg-emerald-50 text-emerald-600 border-emerald-100 shadow-sm' : 'bg-rose-50 text-rose-600 border-rose-100 shadow-sm'}`}>
                   {farm.status ? 'Active Unit' : 'Offline'}
                 </span>
                 <div className="flex gap-4">
-                   <button className="p-2 text-slate-300 hover:text-blue-600 transition-all hover:bg-white rounded-xl shadow-sm"><Edit className="w-5 h-5" /></button>
-                   <button className="p-2 text-slate-300 hover:text-rose-600 transition-all hover:bg-white rounded-xl shadow-sm"><Trash2 className="w-5 h-5" /></button>
+                  <button className="p-2 text-slate-300 hover:text-blue-600 transition-all hover:bg-white rounded-xl shadow-sm"><Edit className="w-5 h-5" /></button>
+                  <button className="p-2 text-slate-300 hover:text-rose-600 transition-all hover:bg-white rounded-xl shadow-sm"><Trash2 className="w-5 h-5" /></button>
                 </div>
               </div>
             </div>
           ))}
-          
+
           {farms.length === 0 && (
             <div className="col-span-full border-2 border-dashed border-slate-200 rounded-3xl p-20 text-center bg-white">
               <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-slate-100">
@@ -156,19 +156,19 @@ export default function FarmsPage() {
       {showModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
           <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md" onClick={() => setShowModal(false)} />
-          
+
           <div className="bg-white border border-slate-200 rounded-3xl p-10 w-full max-w-xl relative z-10 shadow-2xl animate-in fade-in slide-in-from-bottom duration-500 scale-100">
             <div className="flex items-center justify-between mb-10">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-600/30">
-                   <Tractor className="w-7 h-7 text-white" />
+                  <Tractor className="w-7 h-7 text-white" />
                 </div>
                 <div>
                   <h2 className="text-2xl font-black text-slate-900">Define Production Unit</h2>
                   <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Industrial Asset Entry</p>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={() => setShowModal(false)}
                 className="p-3 hover:bg-slate-50 rounded-2xl text-slate-400 hover:text-slate-900 transition-all transform hover:rotate-90 duration-300"
               >
@@ -190,7 +190,7 @@ export default function FarmsPage() {
                   <input
                     required
                     value={newFarm.name}
-                    onChange={(e) => setNewFarm({...newFarm, name: e.target.value})}
+                    onChange={(e) => setNewFarm({ ...newFarm, name: e.target.value })}
                     placeholder="E.g. Green Valley"
                     className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all shadow-inner"
                   />
@@ -200,7 +200,7 @@ export default function FarmsPage() {
                   <input
                     required
                     value={newFarm.code}
-                    onChange={(e) => setNewFarm({...newFarm, code: e.target.value.toUpperCase()})}
+                    onChange={(e) => setNewFarm({ ...newFarm, code: e.target.value.toUpperCase() })}
                     placeholder="UNIT-X"
                     className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-slate-900 font-black tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all shadow-inner"
                   />
@@ -211,7 +211,7 @@ export default function FarmsPage() {
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">GPS Metadata / Coordinates</label>
                 <input
                   value={newFarm.location}
-                  onChange={(e) => setNewFarm({...newFarm, location: e.target.value})}
+                  onChange={(e) => setNewFarm({ ...newFarm, location: e.target.value })}
                   placeholder="E.g. 19.0760° N, 72.8777° E"
                   className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all shadow-inner"
                 />
@@ -222,7 +222,7 @@ export default function FarmsPage() {
                 <textarea
                   rows={3}
                   value={newFarm.address}
-                  onChange={(e) => setNewFarm({...newFarm, address: e.target.value})}
+                  onChange={(e) => setNewFarm({ ...newFarm, address: e.target.value })}
                   placeholder="Complete postal identification..."
                   className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all resize-none shadow-inner"
                 />

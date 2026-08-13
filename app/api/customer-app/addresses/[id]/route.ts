@@ -33,18 +33,22 @@ import {
   setDefaultAddress,
 } from '@/delivery-application/controllers/addresses';
 
-export async function GET(req: NextRequest, context: any) {
-  return getAddressById(req, context);
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
+  return getAddressById(req, { params: resolvedParams });
 }
 
-export async function PUT(req: NextRequest, context: any) {
-  return updateAddress(req, context);
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
+  return updateAddress(req, { params: resolvedParams });
 }
 
-export async function DELETE(req: NextRequest, context: any) {
-  return deleteAddress(req, context);
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
+  return deleteAddress(req, { params: resolvedParams });
 }
 
-export async function PATCH(req: NextRequest, context: any) {
-  return setDefaultAddress(req, context);
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
+  return setDefaultAddress(req, { params: resolvedParams });
 }

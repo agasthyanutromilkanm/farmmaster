@@ -42,7 +42,13 @@ async function getCustomerFromRequest(req: NextRequest) {
   return customer;
 }
 
-import { getAddresses, createAddress } from '@/delivery-application/controllers/addresses';
+import {
+  getAddresses,
+  createAddress,
+  updateAddress,
+  deleteAddress,
+  setDefaultAddress,
+} from '@/delivery-application/controllers/addresses';
 
 export async function GET(req: NextRequest) {
   return getAddresses(req);
@@ -50,4 +56,16 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   return createAddress(req);
+}
+
+export async function PUT(req: NextRequest, context: any) {
+  return updateAddress(req, context);
+}
+
+export async function DELETE(req: NextRequest, context: any) {
+  return deleteAddress(req, context);
+}
+
+export async function PATCH(req: NextRequest, context: any) {
+  return setDefaultAddress(req, context);
 }
