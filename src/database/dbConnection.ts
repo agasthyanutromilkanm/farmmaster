@@ -1,6 +1,7 @@
 import dns from 'dns';
 dns.setServers(['8.8.8.8']);
 import mongoose from 'mongoose';
+// redeploy: 2026-08-14
 
 // ─── Pre-register all models to resolve Mongoose lazy-loading race conditions ───
 import '../models/Farm';
