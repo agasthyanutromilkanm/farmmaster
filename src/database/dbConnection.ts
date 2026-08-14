@@ -32,6 +32,21 @@ import '../models/Labor';
 import '../models/ProcurementSource';
 import '../../app/api/customer-app/models/Customer';
 
+function cleanMongoUri(rawUri?: string): string {
+  let uri = (rawUri || '').trim();
+  if (uri.startsWith('"') && uri.endsWith('"')) uri = uri.slice(1, -1);
+  if (uri.startsWith("'") && uri.endsWith("'")) uri = uri.slice(1, -1);
+  uri = uri.trim();
+  if (!uri) {
+    uri = 'mongodb+srv://agasthyanutromilkanm_db_user:RIUUsL50QZtWqd6R@anm.spyvi98.mongodb.net/farmmaster?retryWrites=true&w=majority';
+  }
+  if (uri.startsWith('mongodb+srv://')) {
+    // Strip illegal port numbers from mongodb+srv format (e.g. :27017)
+    uri = uri.replace(/^(mongodb\+srv:\/\/(?:[^:@\/]+(?::[^@\/]+)?@)?)([^:\/?#]+)(?::\d+)?(\/.*)?$/, '$1$2$3');
+  }
+  return uri;
+}
+
 /**
  * Global is used here to maintain a cached connection across hot reloads
  * in development. This prevents connections from growing exponentially
@@ -44,32 +59,30 @@ if (!cached) {
 }
 
 async function dbConnect() {
-  const mongodbUri = process.env.MONGODB_URI;
-  if (!mongodbUri) {
-    throw new Error('Please define the MONGODB_URI environment variable inside .env');
-  }
+  const rawUri = process.env.MONGODB_URI;
+  const mongodbUri = cleanMongoUri(rawUri);
 
   if (cached.conn) {
     return cached.conn;
   }
 
   if (!cached.promise) {
-    const opts = {
+    const opts: mongoose.ConnectOptions = {
       bufferCommands: false,
+      dbName: 'farmmaster',
     };
 
     try {
-      dns.setServers(['8.8.8.8']);
-      console.log('Dynamically set DNS servers to [8.8.8.8] in dbConnect worker thread.');
+      dns.setServers(['8.8.8.8', '8.8.4.4']);
+      console.log('Dynamically set DNS servers to [8.8.8.8, 8.8.4.4] in dbConnect.');
     } catch (err) {
       console.error('Non-blocking error setting DNS servers:', err);
     }
 
-    cached.promise = mongoose.connect(mongodbUri, opts).then((mongoose) => {
-      return mongoose;
+    cached.promise = mongoose.connect(mongodbUri, opts).then((mongooseInstance) => {
+      return mongooseInstance;
     });
   }
-
 
   try {
     cached.conn = await cached.promise;
@@ -82,3 +95,4 @@ async function dbConnect() {
 }
 
 export default dbConnect;
+
