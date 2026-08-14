@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import dbConnect from '@/src/database/dbConnection';
 import Customer from '../../models/Customer';
+import DeliveryExecutive from '@/delivery-application/models/DeliveryExecutive';
 import { successResponse, errorResponse } from '@/src/utils/responses';
 
 export async function POST(req: NextRequest) {
@@ -19,27 +20,59 @@ export async function POST(req: NextRequest) {
 
     await dbConnect();
 
+    const cleanPhone = phone.replace(/^(\+91|0)/, '').replace(/\D/g, '');
     const universalOtp = '1234';
     const otpExpiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes expiration
 
-    let customer = await Customer.findOne({ phone });
-    if (!customer || customer.isDeleted) {
+    // Check Delivery Executive first
+    let executive = await DeliveryExecutive.findOne({
+      $or: [
+        { phone: phone },
+        { phone: cleanPhone },
+        { phone: `+91${cleanPhone}` }
+      ]
+    });
+
+    if (executive) {
+      if (executive.status === 'inactive') {
+        return errorResponse('Account is disabled', 403);
+      }
+      executive.otp = universalOtp;
+      executive.otpExpiry = otpExpiry;
+      await executive.save();
+
       return successResponse(
-        { phone, otp: universalOtp, isRegistered: false },
-        'Mobile number is not registered'
+        { phone: executive.phone, otp: universalOtp, isRegistered: true, role: 'DELIVERY_EXECUTIVE' },
+        'OTP sent successfully (universal testing OTP is 1234)'
       );
     }
 
-    if (customer.status === false) {
-      return errorResponse('Account is disabled', 403);
+    // Check Customer
+    let customer = await Customer.findOne({
+      $or: [
+        { phone: phone },
+        { phone: cleanPhone },
+        { phone: `+91${cleanPhone}` }
+      ]
+    });
+
+    if (customer && !customer.isDeleted) {
+      if (customer.status === false) {
+        return errorResponse('Account is disabled', 403);
+      }
+      customer.otp = universalOtp;
+      customer.otpExpiry = otpExpiry;
+      await customer.save();
+
+      return successResponse(
+        { phone: customer.phone, otp: universalOtp, isRegistered: true, role: 'CUSTOMER' },
+        'OTP sent successfully (universal testing OTP is 1234)'
+      );
     }
 
-    customer.otp = universalOtp;
-    customer.otpExpiry = otpExpiry;
-    await customer.save();
-
+    // New number - return isRegistered: true with universal OTP so verification creates/logs in
     return successResponse(
-      { phone: customer.phone, otp: universalOtp, isRegistered: true },
+      { phone, otp: universalOtp, isRegistered: true },
       'OTP sent successfully (universal testing OTP is 1234)'
     );
   } catch (error: any) {
@@ -47,3 +80,4 @@ export async function POST(req: NextRequest) {
     return errorResponse(error.message || 'Internal server error', 500);
   }
 }
+
