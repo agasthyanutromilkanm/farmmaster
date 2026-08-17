@@ -38,7 +38,7 @@ function cleanMongoUri(rawUri?: string): string {
   if (uri.startsWith("'") && uri.endsWith("'")) uri = uri.slice(1, -1);
   uri = uri.trim();
   if (!uri) {
-    uri = 'mongodb+srv://agasthyanutromilkanm_db_user:RIUUsL50QZtWqd6R@anm.spyvi98.mongodb.net/farmmaster?retryWrites=true&w=majority';
+    uri = 'mongodb+srv://agasthyanutromilkanm_db_user:RIUUsL50QZtWqd6R@anm.spyvi98.mongodb.net/anm?retryWrites=true&w=majority';
   }
   if (uri.startsWith('mongodb+srv://')) {
     // Strip illegal port numbers from mongodb+srv format (e.g. :27017)
@@ -67,9 +67,10 @@ async function dbConnect() {
   }
 
   if (!cached.promise) {
+    const dbName = process.env.MONGODB_DB || 'anm';
     const opts: mongoose.ConnectOptions = {
       bufferCommands: false,
-      dbName: 'farmmaster',
+      dbName,
     };
 
     try {
