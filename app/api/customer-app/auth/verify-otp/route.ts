@@ -142,16 +142,16 @@ export async function POST(req: NextRequest) {
       await customer.save();
     }
 
-    // Return Delivery Executive role so mobile app accepts login
-    const userId = executive ? executive._id.toString() : customer!._id.toString();
+    // Return Customer role for customer app
+    const userId = customer ? customer._id.toString() : (executive ? executive._id.toString() : '');
     const userPhone = customer ? customer.phone : phone;
     const userName = customer?.name || executive?.name || 'User';
 
     const payload = {
       userId,
       email: userPhone,
-      role: 'DELIVERY_EXECUTIVE',
-      permissions: ['DELIVERY_EXECUTIVE'],
+      role: 'CUSTOMER',
+      permissions: ['CUSTOMER'],
     };
 
     const accessToken = generateAccessToken(payload);
@@ -167,7 +167,7 @@ export async function POST(req: NextRequest) {
         mobile: userPhone,
         name: userName,
         email: customer?.email || executive?.email || '',
-        role: 'DELIVERY_EXECUTIVE',
+        role: 'CUSTOMER',
       },
     }, 'Login successful');
   } catch (error: any) {
