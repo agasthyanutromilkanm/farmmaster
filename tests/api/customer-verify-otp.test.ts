@@ -16,12 +16,21 @@ vi.mock('@/src/utils/jwt', () => ({
   generateRefreshToken: vi.fn(() => 'refresh-token'),
 }));
 
+vi.mock('@/delivery-application/models/DeliveryExecutive', () => ({
+  default: {
+    findOne: vi.fn(),
+    create: vi.fn(),
+  },
+}));
+
 import Customer from '@/app/api/customer-app/models/Customer';
+import DeliveryExecutive from '@/delivery-application/models/DeliveryExecutive';
 import { POST } from '@/app/api/customer-app/auth/verify-otp/route';
 
 describe('POST /api/customer-app/auth/verify-otp', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(DeliveryExecutive.findOne).mockResolvedValue(null);
   });
 
   it('verifies successfully with the universal OTP 1234 even if database otp is different/null', async () => {
@@ -100,7 +109,7 @@ describe('POST /api/customer-app/auth/verify-otp', () => {
     expect(body.data.user.id).toBe('auto-registered-123');
     expect(Customer.create).toHaveBeenCalledWith({
       phone: '1234567890',
-      name: '',
+      name: 'User 7890',
       status: true,
       isDeleted: false,
     });

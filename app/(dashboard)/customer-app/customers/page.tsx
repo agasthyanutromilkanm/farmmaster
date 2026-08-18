@@ -242,10 +242,23 @@ export default function CustomersPage() {
                         {customer.email || '—'}
                       </td>
                       <td className="px-6 py-4">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold text-slate-700 bg-slate-50 border border-slate-100">
-                          <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                          {customer.addresses.length} {customer.addresses.length === 1 ? 'address' : 'addresses'}
-                        </span>
+                        {customer.addresses.length > 0 ? (
+                          <div className="flex flex-col gap-1.5">
+                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-[10px] font-black text-blue-700 bg-blue-50 border border-blue-100 w-fit uppercase tracking-wider">
+                              <MapPin className="w-3 h-3 text-blue-500" />
+                              {customer.addresses.length} {customer.addresses.length === 1 ? 'Saved' : 'Saved'}
+                            </span>
+                            <span className="text-xs text-slate-500 font-bold max-w-[220px] truncate" title={customer.addresses.find(a => a.isDefault)?.addressLine1 || customer.addresses[0].addressLine1}>
+                              {customer.addresses.find(a => a.isDefault)?.addressLine1 || customer.addresses[0].addressLine1}
+                              , {customer.addresses.find(a => a.isDefault)?.city || customer.addresses[0].city}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold text-slate-700 bg-slate-50 border border-slate-100">
+                            <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                            No addresses
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-sm text-slate-500 font-medium">
                         <span className="flex items-center gap-2">

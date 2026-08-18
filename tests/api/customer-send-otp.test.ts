@@ -10,12 +10,20 @@ vi.mock('@/app/api/customer-app/models/Customer', () => ({
   },
 }));
 
+vi.mock('@/delivery-application/models/DeliveryExecutive', () => ({
+  default: {
+    findOne: vi.fn(),
+  },
+}));
+
 import Customer from '@/app/api/customer-app/models/Customer';
+import DeliveryExecutive from '@/delivery-application/models/DeliveryExecutive';
 import { POST } from '@/app/api/customer-app/auth/send-otp/route';
 
 describe('POST /api/customer-app/auth/send-otp', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(DeliveryExecutive.findOne).mockResolvedValue(null);
   });
 
   it('returns 400 if phone is missing', async () => {
@@ -33,7 +41,7 @@ describe('POST /api/customer-app/auth/send-otp', () => {
     expect(body.error).toContain('Phone number is required');
   });
 
-  it('returns isRegistered: false if customer is not registered', async () => {
+  it('returns isRegistered: true if customer is not registered (to trigger auto-registration on verify)', async () => {
     vi.mocked(Customer.findOne).mockResolvedValue(null);
 
     const req = new Request('http://localhost/api/customer-app/auth/send-otp', {
@@ -47,7 +55,7 @@ describe('POST /api/customer-app/auth/send-otp', () => {
 
     expect(response.status).toBe(200);
     expect(body.success).toBe(true);
-    expect(body.data.isRegistered).toBe(false);
+    expect(body.data.isRegistered).toBe(true);
     expect(body.data.otp).toBe('1234');
     expect(body.data.phone).toBe('1234567890');
   });

@@ -109,6 +109,20 @@ export async function updateOrderStatus(req: NextRequest, { params }: { params: 
       return errorResponse('Order not found or not assigned to you', 403);
     }
 
+    // Dynamic Rule: Prevent starting deliveries for future or past orders
+    if (status === 'out_for_delivery') {
+      const orderDate = order.deliveryDate ? new Date(order.deliveryDate) : new Date(order.createdAt);
+      
+      // Use standard timezone for robust date matching
+      const formatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' });
+      const todayStr = formatter.format(new Date()); // YYYY-MM-DD
+      const orderDateStr = formatter.format(orderDate);
+
+      if (todayStr !== orderDateStr) {
+        return errorResponse('You can only start deliveries for today\'s orders', 400);
+      }
+    }
+
     // Update status and feedback
     order.status = status;
     if (comment !== undefined) order.comment = comment;
