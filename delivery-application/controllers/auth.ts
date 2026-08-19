@@ -38,8 +38,11 @@ export async function login(req: NextRequest) {
 
     // If no executive found, return invalid credentials
     if (!executive) {
+      console.log(`[Diagnostic] No DeliveryExecutive found for username: ${username}`);
       return errorResponse('Invalid credentials', 401);
     }
+    
+    console.log(`[Diagnostic] Found executive: phone=${executive.phone}, password=${executive.password}, status=${executive.status}`);
 
     if (executive.status === 'inactive') {
       return errorResponse('Account is disabled', 403);

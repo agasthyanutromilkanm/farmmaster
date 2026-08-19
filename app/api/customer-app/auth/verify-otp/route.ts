@@ -28,28 +28,51 @@ export async function POST(req: NextRequest) {
 
     const cleanPhone = phone.replace(/^(\+91|0)/, '').replace(/\D/g, '');
     const isUniversalOtp = otp === '1234';
+    const requestedRole = body?.role === 'DELIVERY_EXECUTIVE' ? 'DELIVERY_EXECUTIVE' : 'CUSTOMER';
 
-    // 1. Check if Delivery Executive exists with this phone
-    let executive = await DeliveryExecutive.findOne({
-      $or: [
-        { phone: phone },
-        { phone: cleanPhone },
-        { phone: `+91${cleanPhone}` }
-      ]
-    });
+    // ==========================================
+    // 1. DELIVERY EXECUTIVE LOGIN FLOW
+    // ==========================================
+    if (requestedRole === 'DELIVERY_EXECUTIVE') {
+      let executive = await DeliveryExecutive.findOne({
+        $or: [ { phone: phone }, { phone: cleanPhone }, { phone: `+91${cleanPhone}` } ]
+      });
 
-    if (executive) {
+      if (!executive) {
+        if (isUniversalOtp) {
+          // Auto-create DeliveryExecutive & Customer if they don't exist
+          let customer = await Customer.findOne({ $or: [ { phone: phone }, { phone: cleanPhone }, { phone: `+91${cleanPhone}` } ] });
+          if (!customer) {
+            customer = await Customer.create({
+              phone: cleanPhone || phone,
+              name: 'User ' + (cleanPhone || phone).slice(-4),
+              status: true,
+              isDeleted: false,
+            });
+          }
+          executive = await DeliveryExecutive.create({
+            name: customer.name,
+            phone: customer.phone,
+            email: '',
+            password: 'password123',
+            vehicleType: 'Bike',
+            vehicleNumber: '',
+            status: 'active',
+          });
+        } else {
+          return errorResponse('Delivery Executive record not found.', 404);
+        }
+      }
+
       if (executive.status === 'inactive') {
         return errorResponse('Account is disabled', 403);
       }
-
       if (!isUniversalOtp && executive.otp !== otp) {
         return errorResponse('Invalid OTP code', 400);
       }
       if (!isUniversalOtp && (!executive.otpExpiry || executive.otpExpiry < new Date())) {
         return errorResponse('OTP code has expired', 400);
       }
-
       if (!isUniversalOtp) {
         executive.otp = null;
         executive.otpExpiry = null;
@@ -63,12 +86,9 @@ export async function POST(req: NextRequest) {
         permissions: ['DELIVERY_EXECUTIVE'],
       };
 
-      const accessToken = generateAccessToken(payload);
-      const refreshToken = generateRefreshToken(payload);
-
       return successResponse({
-        token: accessToken,
-        refreshToken,
+        token: generateAccessToken(payload),
+        refreshToken: generateRefreshToken(payload),
         isRegistered: true,
         user: {
           id: executive._id,
@@ -83,13 +103,11 @@ export async function POST(req: NextRequest) {
       }, 'Login successful');
     }
 
-    // 2. Check Customer model
+    // ==========================================
+    // 2. CUSTOMER LOGIN FLOW (Default)
+    // ==========================================
     let customer = await Customer.findOne({
-      $or: [
-        { phone: phone },
-        { phone: cleanPhone },
-        { phone: `+91${cleanPhone}` }
-      ]
+      $or: [ { phone: phone }, { phone: cleanPhone }, { phone: `+91${cleanPhone}` } ]
     });
 
     if (!customer || customer.isDeleted) {
@@ -100,24 +118,26 @@ export async function POST(req: NextRequest) {
           customer.name = customer.name || '';
           await customer.save();
         } else {
-          // Auto-create Delivery Executive & Customer on universal OTP
           customer = await Customer.create({
             phone: cleanPhone || phone,
             name: 'User ' + (cleanPhone || phone).slice(-4),
             status: true,
             isDeleted: false,
           });
-
-          // Also create DeliveryExecutive so delivery app works seamlessly
-          executive = await DeliveryExecutive.create({
-            name: customer.name,
-            phone: customer.phone,
-            email: '',
-            password: 'password123',
-            vehicleType: 'Bike',
-            vehicleNumber: '',
-            status: 'active',
-          });
+          
+          // Silently create executive too so they can test both apps
+          const execExists = await DeliveryExecutive.findOne({ phone: customer.phone });
+          if (!execExists) {
+            await DeliveryExecutive.create({
+              name: customer.name,
+              phone: customer.phone,
+              email: '',
+              password: 'password123',
+              vehicleType: 'Bike',
+              vehicleNumber: '',
+              status: 'active',
+            });
+          }
         }
       } else {
         return errorResponse('Customer record not found. Please request OTP first.', 404);
@@ -127,46 +147,35 @@ export async function POST(req: NextRequest) {
     if (customer && customer.status === false) {
       return errorResponse('Account is disabled', 403);
     }
-
     if (!isUniversalOtp && customer && customer.otp !== otp) {
       return errorResponse('Invalid OTP code', 400);
     }
-
     if (!isUniversalOtp && customer && (!customer.otpExpiry || customer.otpExpiry < new Date())) {
       return errorResponse('OTP code has expired', 400);
     }
-
     if (!isUniversalOtp && customer) {
       customer.otp = null;
       customer.otpExpiry = null;
       await customer.save();
     }
 
-    // Return Customer role for customer app
-    const userId = customer ? customer._id.toString() : (executive ? executive._id.toString() : '');
-    const userPhone = customer ? customer.phone : phone;
-    const userName = customer?.name || executive?.name || 'User';
-
     const payload = {
-      userId,
-      email: userPhone,
+      userId: customer._id.toString(),
+      email: customer.phone,
       role: 'CUSTOMER',
       permissions: ['CUSTOMER'],
     };
 
-    const accessToken = generateAccessToken(payload);
-    const refreshToken = generateRefreshToken(payload);
-
     return successResponse({
-      token: accessToken,
-      refreshToken,
+      token: generateAccessToken(payload),
+      refreshToken: generateRefreshToken(payload),
       isRegistered: true,
       user: {
-        id: userId,
-        phone: userPhone,
-        mobile: userPhone,
-        name: userName,
-        email: customer?.email || executive?.email || '',
+        id: customer._id.toString(),
+        phone: customer.phone,
+        mobile: customer.phone,
+        name: customer.name,
+        email: customer.email || '',
         role: 'CUSTOMER',
       },
     }, 'Login successful');
