@@ -37,7 +37,7 @@ export async function DELETE(
 
     const { id: productId } = await params;
     
-    let cart: any = await Cart.findOne({ customerId: customer._id });
+    const cart: any = await Cart.findOne({ customerId: customer._id });
     if (!cart) {
       return errorResponse('Cart not found', 404);
     }

@@ -20,6 +20,7 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "*.js",          // Ignore script files at root
     "scripts/**",    // Ignore utility scripts directory
+    "scratch/**",    // Ignore temporary scratch scripts
   ]),
 ]);
 

@@ -61,16 +61,17 @@ if (!cached) {
 async function dbConnect() {
   const rawUri = process.env.MONGODB_URI;
   const mongodbUri = cleanMongoUri(rawUri);
+  console.log('--- dbConnect() called. target URI:', mongodbUri, 'cached:', !!cached.conn);
 
   if (cached.conn) {
     return cached.conn;
   }
 
   if (!cached.promise) {
-    const dbName = process.env.MONGODB_DB || 'anm';
+    const dbName = process.env.MONGODB_DB;
     const opts: mongoose.ConnectOptions = {
       bufferCommands: false,
-      dbName,
+      ...(dbName ? { dbName } : {}),
     };
 
     try {
@@ -80,6 +81,7 @@ async function dbConnect() {
       console.error('Non-blocking error setting DNS servers:', err);
     }
 
+    console.log('Connecting to MongoDB URI:', mongodbUri);
     cached.promise = mongoose.connect(mongodbUri, opts).then((mongooseInstance) => {
       return mongooseInstance;
     });

@@ -155,7 +155,7 @@ export async function PUT(req: NextRequest) {
       return errorResponse('Invalid JSON body', 400);
     }
 
-    let cart: any = await Cart.findOne({ customerId: customer._id });
+    const cart: any = await Cart.findOne({ customerId: customer._id });
     if (!cart) {
       return errorResponse('Cart not found', 404);
     }
@@ -208,7 +208,7 @@ export async function DELETE(req: NextRequest) {
     const url = new URL(req.url);
     const productId = url.searchParams.get('productId');
 
-    let cart: any = await Cart.findOne({ customerId: customer._id });
+    const cart: any = await Cart.findOne({ customerId: customer._id });
     if (!cart) {
       return errorResponse('Cart not found', 404);
     }

@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     const otpExpiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes expiration
 
     // Check Delivery Executive first
-    let executive = await DeliveryExecutive.findOne({
+    const executive = await DeliveryExecutive.findOne({
       $or: [
         { phone: phone },
         { phone: cleanPhone },
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Check Customer
-    let customer = await Customer.findOne({
+    const customer = await Customer.findOne({
       $or: [
         { phone: phone },
         { phone: cleanPhone },

@@ -6,7 +6,7 @@ vi.mock('@/src/database/dbConnection', () => ({
 }));
 
 vi.mock('@/src/utils/authGuard', () => ({
-  withAuth: vi.fn((req: any, roles: string[], handler: Function) => handler({ farmId: 'farm-123' })),
+  withAuth: vi.fn((req: any, roles: string[], handler: (...args: any[]) => any) => handler({ farmId: 'farm-123' })),
 }));
 
 vi.mock('@/src/models/Logs', () => ({

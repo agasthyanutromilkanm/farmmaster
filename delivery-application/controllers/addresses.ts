@@ -49,7 +49,7 @@ export async function getAddresses(req: NextRequest) {
       queryConditions.push({ phone });
     }
 
-    let addressList = await Address.find({
+    const addressList = await Address.find({
       $or: queryConditions,
       isDeleted: { $ne: true }
     }).sort({ createdAt: -1 });

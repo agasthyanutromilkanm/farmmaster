@@ -80,7 +80,7 @@ export async function PUT(
       }
 
       const obj = typeof updatedProduct.toObject === 'function' ? updatedProduct.toObject() : updatedProduct;
-      let inv = await ProductInventory.findOne({ productId: id });
+      const inv = await ProductInventory.findOne({ productId: id });
       if (inv) {
         obj.quantity = inv.quantity;
       }

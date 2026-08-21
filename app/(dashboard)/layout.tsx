@@ -100,13 +100,15 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   });
 
   useEffect(() => {
-    if (pathname.startsWith('/customer-app')) {
-      setExpandedMenus((prev) => ({ ...prev, 'Customer App': true }));
-    }
-    const isHealthAppPath = ['/', '/farms', '/sheds', '/tags', '/cattle', '/land-management', '/bmc-management', '/departments', '/users', '/roles'].some(path => pathname === path || (path !== '/' && pathname.startsWith(path + '/')));
-    if (isHealthAppPath) {
-      setExpandedMenus((prev) => ({ ...prev, 'Health Application': true }));
-    }
+    Promise.resolve().then(() => {
+      if (pathname.startsWith('/customer-app')) {
+        setExpandedMenus((prev) => ({ ...prev, 'Customer App': true }));
+      }
+      const isHealthAppPath = ['/', '/farms', '/sheds', '/tags', '/cattle', '/land-management', '/bmc-management', '/departments', '/users', '/roles'].some(path => pathname === path || (path !== '/' && pathname.startsWith(path + '/')));
+      if (isHealthAppPath) {
+        setExpandedMenus((prev) => ({ ...prev, 'Health Application': true }));
+      }
+    });
   }, [pathname]);
 
   useEffect(() => {

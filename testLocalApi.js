@@ -6,7 +6,7 @@ const token = jwt.sign(
   { expiresIn: '1h' }
 );
 
-fetch('http://localhost:3001/api/departments', {
+fetch('http://localhost:3000/api/departments', {
   headers: {
     'Authorization': `Bearer ${token}`
   }

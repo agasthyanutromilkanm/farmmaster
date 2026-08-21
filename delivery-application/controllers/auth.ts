@@ -27,7 +27,7 @@ export async function login(req: NextRequest) {
     const cleanPhone = username.replace(/^(\+91|0)/, '').replace(/\D/g, '');
 
     // Find Delivery Executive by phone or email
-    let executive = await DeliveryExecutive.findOne({
+    const executive = await DeliveryExecutive.findOne({
       $or: [
         { phone: username },
         { phone: cleanPhone },
